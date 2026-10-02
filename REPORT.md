@@ -9,23 +9,28 @@ Junwei Xu (285594) · 2 October 2026
 
 ## 1. Summary
 
-Three questions, answered with runnable code:
+Four questions, answered with runnable code:
 
 1. **Is the proposed project tractable without hardware?** Yes. A complete
    pipeline — ray-traced data, baseline models, ablation — runs on a laptop
    in under 30 seconds per model.
 2. **Does it work on real data?** Yes, and better than on my own simulator.
-   On two independent ray-traced scenarios the MLP reaches **0.87 / 0.90
-   top-1** against an oracle of 13.6 / 13.9 dB.
-3. **What actually limits performance?** *Not* angular spread — the opposite
-   of what my simulator suggested. On real data the best beam is far more
-   sharply defined than I had modelled, and the task is correspondingly easier.
+   Across three ray-traced scenarios the MLP reaches **0.87 / 0.90 / 0.90
+   top-1** against oracles of 13.6 / 13.9 / 13.9 dB.
+3. **What actually limits performance?** *Not* angular spread, and *not*
+   frequency — both contrary to what my simulator suggested. The real data
+   shows the best beam is far more sharply defined than I had modelled.
+4. **Would millimetre-wave be harder?** I tested this directly (§7) and the
+   answer is no: 28 GHz gives 0.903 top-1 versus 0.899 at 3.5 GHz, because
+   ULA beamwidth depends on antenna count alone, not on wavelength.
 
-Finding 3 is the important one, and it is the reason real data was worth the
-trouble: **my simulator was the bottleneck, not the problem.** The ablation in
-§4 had identified angular spread as the fundamental limit; real ray tracing
-overturns that. Any project proposal built on the simulation result would have
-started from a wrong premise.
+Findings 3 and 4 are the important ones, and they are the reason real data was
+worth the trouble: **my simulator was the bottleneck, not the problem.** The
+ablation in §4 had identified angular spread as the fundamental limit; real ray
+tracing overturns that. And once frequency is ruled out, the lever that
+actually controls difficulty is the **codebook-to-array size ratio** — which
+tells the project what to vary next. Any proposal built on the simulation
+result alone would have started from a wrong premise.
 
 ---
 
@@ -153,54 +158,57 @@ reference. Two of the six bugs were only found because a number looked
 
 ---
 
-## 5. DeepMIMO: attempted, blocked
+## 5. DeepMIMO: first attempt blocked, then resolved
 
-The proper validation is on real ray-traced data. This was attempted and
-**failed for environmental reasons**, documented rather than hidden:
+The proper validation is on real ray-traced data. The first attempt
+**failed for environmental reasons**:
 
 - `deepmimo` v4 installed cleanly (Python 3.12 via `uv`; the project's ROCm
   Python 3.14 has no prebuilt wheel for its `numpy<2.3` pin)
-- The API endpoint responds correctly, returning a signed redirect
-- That redirect points at **`f005.backblazeb2.com`**, which is unreachable from
-  this network — TCP connection reset, every attempt, on both IPv4 and IPv6
-- 200+ real scenarios are available in the database (Boston 5G, Los Angeles,
-  Beijing, Shanghai, Guangzhou, …) — none can be fetched here
+- The API endpoint responded correctly, returning a signed redirect
+- That redirect pointed at **`f005.backblazeb2.com`**, unreachable from this
+  network — TCP connection reset on every attempt, both IPv4 and IPv6
 
-So the realistic-channel study above stands in for it. It reproduces the
-*effects* ray tracing would have produced, but it is my model, not measured
-data, and the distinction matters.
+**Resolved** once the university VPN was connected; §6 covers the real data.
+Two non-obvious mechanics had to be worked out first:
 
-**Code is ready.** `fetch_deepmimo.py` bypasses the failing wrapper and hits the
-same public endpoint directly; `deepmimo_adapter.py` and `train_deepmimo.py`
-implement the DeepMIMO protocol including the standard *N-challenging-beams*
-evaluation. On a network that can reach Backblaze, this should run as-is.
+- The download URL is a **one-shot token**. Issuing a HEAD request to check the
+  file size consumes it, and the subsequent GET fails with
+  `{"error": "Download not found or already completed"}`. The token must be
+  obtained and used within one flow.
+- There is a **daily download quota** on the server. Only some of the 201
+  catalogued scenarios are approved, so scenarios are fetched one at a time in
+  priority order rather than in bulk.
 
 ---
 
-## 5. Real ray-traced data (DeepMIMO)
+## 6. Real ray-traced data (DeepMIMO)
 
-The download failed earlier because the CDN host was unreachable. With the
-university VPN connected it works, and the results below come from actual
-ray-traced channels — not from my simulator.
+All results below come from actual ray-traced channels, not from my simulator.
 
-### 5.1 Data provenance
+### 6.1 Data provenance
 
-| | ASU campus | Miami city |
-|---|---|---|
-| Ray tracer | Remcom Wireless InSite 3.3 | same |
-| Carrier | 3.5 GHz | 3.5 GHz |
-| Max path depth | 7 | 7 |
-| Grid users (total) | 131 931 | 42 984 |
-| Users with a valid path | 85 157 (65%) | 27 061 (63%) |
-| Base stations | 1 | 3 (site 0 used here) |
-| Sampled for training | 20 000 | 20 000 |
-| Path loss spread | −209 … −97 dB | −200 … −81 dB |
-| Oracle relative gain | 13.60 dB | 13.89 dB |
+| | ASU campus | Miami city | Miami city |
+|---|---|---|---|
+| Scenario | `asu_campus_3p5` | `city_6_miami_3p5` | `city_6_miami_28` |
+| Ray tracer | Remcom Wireless InSite 3.3 | same | same |
+| Carrier | 3.5 GHz | 3.5 GHz | **28 GHz** |
+| Band | Sub-6 (FR1) | Sub-6 (FR1) | **mmWave (FR2)** |
+| Max path depth | 7 | 4 | 4 |
+| Grid users (total) | 131 931 | 42 984 | 42 984 |
+| Users with a valid path | 85 157 (65%) | 27 061 (63%) | 27 061 (63%) |
+| Base stations | 1 | 3 (site 0 used here) | 3 (site 0 used here) |
+| Sampled for training | 20 000 | 20 000 | 20 000 |
+| Path loss spread | −209 … −97 dB | −200 … −81 dB | −227 … −100 dB |
+| Oracle relative gain | 13.60 dB | 13.89 dB | 13.88 dB |
 
-Two scenarios were chosen deliberately: a **campus** and a **dense urban**
-cell, to check that conclusions are not specific to one propagation environment.
+Three scenarios were chosen deliberately: a **campus** and a **dense urban**
+cell, to check that conclusions are not specific to one propagation environment;
+and the Miami cell at **two different frequencies**, to test whether the band
+matters at all (§7). The 28 GHz run is a controlled comparison — same city, same
+site, same array, same codebook, only the carrier differs.
 
-### 5.2 Results on real data
+### 6.2 Results on real data
 
 3000 held-out users per scenario, 40 epochs, ~10 s per model on the GPU.
 
@@ -211,19 +219,24 @@ cell, to check that conclusions are not specific to one propagation environment.
 | ASU campus | linear probe | 24 640 | 0.192 | 0.358 | 8.23 dB | 61% |
 | ASU campus | **MLP** | 180 800 | **0.866** | 0.979 | **13.52 dB** | 99.4% |
 | ASU campus | CNN | 155 840 | 0.744 | 0.952 | 13.29 dB | 98% |
-| Miami city | random | – | 0.016 | – | 0.00 dB | – |
-| Miami city | majority class | – | 0.307 | – | 10.27 dB | 74% |
-| Miami city | linear probe | 24 640 | 0.324 | 0.530 | 10.48 dB | 75% |
-| Miami city | **MLP** | 180 800 | **0.899** | 0.984 | **13.83 dB** | 99.6% |
-| Miami city | CNN | 155 840 | 0.842 | 0.976 | 13.73 dB | 99% |
+| Miami city 3.5 GHz | random | – | 0.016 | – | 0.00 dB | – |
+| Miami city 3.5 GHz | majority class | – | 0.307 | – | 10.27 dB | 74% |
+| Miami city 3.5 GHz | linear probe | 24 640 | 0.324 | 0.530 | 10.48 dB | 75% |
+| Miami city 3.5 GHz | **MLP** | 180 800 | **0.899** | 0.984 | **13.83 dB** | 99.6% |
+| Miami city 3.5 GHz | CNN | 155 840 | 0.842 | 0.976 | 13.73 dB | 99% |
+| Miami city **28 GHz** | random | – | 0.016 | – | 0.00 dB | – |
+| Miami city **28 GHz** | majority class | – | 0.310 | – | 10.25 dB | 74% |
+| Miami city **28 GHz** | linear probe | 24 640 | 0.320 | 0.541 | 10.40 dB | 75% |
+| Miami city **28 GHz** | **MLP** | 180 800 | **0.903** | 0.986 | **13.82 dB** | 99.6% |
+| Miami city **28 GHz** | CNN | 155 840 | 0.839 | 0.973 | 13.73 dB | 99% |
 
 **The 8-challenging-beam protocol** (the standard evaluation in this
 literature, where the network picks the best of 8 candidates rather than all
-64): MLP reaches 0.437 / 0.665 top-1 and 0.449 / 0.690 top-3 on the two
-scenarios. The top-3 figures equal the theoretical ceiling, confirming the
-protocol is well-formed.
+64): MLP reaches 0.437 / 0.665 / 0.650 top-1 and 0.449 / 0.690 / 0.681 top-3 on
+the three scenarios. The top-3 figures equal the theoretical ceiling, confirming
+the protocol is well-formed.
 
-### 5.3 The finding that matters
+### 6.3 The finding that matters
 
 The MLP recovers **99.4% and 99.6% of the oracle gain**. Essentially all of the
 achievable beamforming gain is predicted from 6 noisy probes.
@@ -251,7 +264,7 @@ open problems that remain are the ones a static single-cell setting hides:
 mobility between probes, beam failure, the cost of the probes themselves, and
 cross-site generalisation. The project should target one of those instead.
 
-### 5.4 Two methodology bugs found and fixed
+### 6.4 Two methodology bugs found and fixed
 
 Recording these because both would have produced wrong numbers.
 
@@ -268,7 +281,7 @@ on both sides. Measured: adjacent-index channel cosine similarity −0.016 versu
 −0.008 for random pairs, i.e. no leakage. The `np.linspace` subsample in the
 adapter also breaks grid adjacency deliberately. The 0.87 figure is real.
 
-### 5.5 Where does it break? An SNR and probe sweep
+### 6.5 Where does it break? An SNR and probe sweep
 
 Since the single-point result is near-oracle, the useful question is where the
 task degrades. ASU campus, MLP and linear probe, relative gain:
@@ -313,18 +326,74 @@ probes — averaging across a moving user is what makes beam selection robust.
 My generator holds the user perfectly still, so it cannot study the thing that
 makes probes valuable in the first place.
 
-**Consequence:** every number in §5.2 and §5.5 is a *single-snapshot* result
+**Consequence:** every number in §6.2 and §6.5 is a *single-snapshot* result
 and should be reported as such. Multi-probe robustness is still unmeasured, and
-it is the most natural next thing to fix — see §6.
+it is the most natural next thing to fix — see §7.
 
 ---
 
-## 6. Honest limitations
+## 7. Does millimetre-wave make it harder? A controlled frequency comparison
 
-**About the real-data results (§5)**
+My first instinct was that the task was easy because 3.5 GHz is Sub-6, where
+beam management matters less, and that millimetre-wave — with its narrow beams
+and genuinely expensive sweep — would be much harder. That seemed like the most
+likely flaw in the real-data results, so I tested it directly.
+
+I downloaded `city_6_miami_28`, the 28 GHz version of the same Miami scenario,
+and reran the identical pipeline. Same array, same codebook, same probes — only
+the carrier frequency changes.
+
+| | 3.5 GHz | 28 GHz |
+|---|---|---|
+| Path loss range | −200.0 … −81.4 dB | −226.6 … −100.4 dB |
+| Wavefront dynamic range | 199.1 dB | 190.1 dB |
+| Median gap, best vs 2nd-best beam | **1.38 dB** | **1.38 dB** |
+| Strongest beam covers | 30.1% of users | 30.7% of users |
+| MLP top-1 | 0.8987 | **0.9033** |
+| MLP relative gain | 13.83 dB | 13.82 dB |
+| % of oracle | 99.6% | 99.6% |
+
+The physics changed substantially — 27 dB more path loss. **The task did not
+change at all.**
+
+### Why frequency is not the lever
+
+The median gap between the best and second-best beam is 1.38 dB in *both*
+bands, and that number is the whole explanation. It is also why the task is
+saturated: when the correct beam is well separated from its neighbours, a small
+network can find it easily.
+
+For a uniform linear array the beamwidth is approximately
+
+```
+Δθ ≈ 2 / N   radians
+```
+
+which depends on the **antenna count alone** and is *independent of frequency*.
+Raising the carrier frequency shortens the wavelength and shrinks the physical
+aperture, but it simultaneously sharpens the channel's angular structure. The
+two effects cancel, so the geometry that determines label separability is
+unchanged.
+
+**The consequence matters more than the result.** If difficulty is not set by
+frequency, then it is set by the **ratio of codebook size to array size** — that
+is what determines how many beams sit close enough together to be confused. So
+the way to make this problem genuinely hard is to *increase the number of beams
+or the number of antennas*, not to change band.
+
+This also reframes the earlier "static user" finding: the two are the same
+problem. Both the temporal dimension (mobility) and the spatial dimension (array
+size) are ways of shrinking the margin between competing beams, and 32 antennas
+over 64 beams with a frozen user leaves both margins wide open.
+
+---
+
+## 8. Honest limitations
+
+**About the real-data results (§6)**
 
 - **The probes are redundant, so the headline number is optimistic.** All six
-  probes see an identical channel (§5.5), which is physically wrong and removes
+  probes see an identical channel (§6.5), which is physically wrong and removes
   exactly the multi-probe robustness that motivates beam management in 3GPP.
   Until this is fixed, 0.87 / 0.90 is a single-snapshot result.
 - **Static users, single cell, single frame.** Users never move and never leave
@@ -332,7 +401,7 @@ it is the most natural next thing to fix — see §6.
   mobility, handover, and beam failure, and the numbers will drop.
 - **No overhead accounting.** The whole point is to avoid a 64-beam sweep, yet
   the probes it costs are never counted. I have shown the task is *learnable*,
-  not that it is *worth doing*. §5.5 makes this worse: since extra probes cost
+  not that it is *worth doing*. §6.5 makes this worse: since extra probes cost
   nothing in my data, I have not measured the real trade-off at all.
 - **A near-oracle result is a warning, not a success.** 99.4% of oracle gain means
   the benchmark is saturated. A saturated benchmark cannot support a thesis
@@ -346,30 +415,38 @@ it is the most natural next thing to fix — see §6.
 - **No comparison against published DeepMIMO results.** Numbers in the beam
   prediction literature exist for this exact task; mine should be measured
   against them rather than reported standalone.
-- **Only 2 of 201 available scenarios were used.** Enough to show the conclusion
+- **Only 3 of 201 available scenarios were used.** Enough to show the conclusion
   is not scenario-specific, not enough to call it general.
+- **The frequency comparison in §7 is a single pair** — one city at two bands.
+  The explanation in §7 is supported by the ULA beamwidth relation, but the
+  empirical side rests on one scenario.
 
 **About the simulation results (§3–4)**
 
-- They remain properties of my channel models. §5 shows the angular-spread
+- They remain properties of my channel models. §6 shows the angular-spread
   conclusion drawn from them does not survive contact with real data, which
   retroactively discredits the rest of that ablation as a guide to the real
   problem.
 
 **Next concrete steps, in priority order**
 
-1. **Add mobility between probes.** This is the defect that matters: it is why
-   the current numbers are optimistic, and it is the mechanism that makes
-   multi-probe beam management work in 3GPP. Expect the largest drop here.
-2. Train on one site, test on another (Miami has 3 base stations available) to
+1. **Increase the codebook-to-array ratio.** §7 shows this is the actual lever
+   on difficulty — not frequency, not path loss. Going from 64 to 256 beams on
+   the same 32-element array is the single change most likely to move the
+   numbers off the floor, and it is also the realistic mmWave configuration.
+2. **Add mobility between probes.** This is the defect that makes the current
+   numbers optimistic, and it is the mechanism that makes multi-probe beam
+   management work in 3GPP. Both (1) and (2) shrink the same margin, so they
+   compound.
+3. Train on one site, test on another (Miami has 3 base stations available) to
    measure cross-site generalisation.
-3. Compare against published numbers on the same DeepMIMO scenario.
-4. Re-run the SNR sweep on a random split by *site* rather than by user, so the
-   test set is genuinely unseen geography.
+4. Compare against published numbers on the same DeepMIMO scenario.
+5. Re-run the SNR sweep on a split by *site* rather than by user, so the test
+   set is genuinely unseen geography.
 
 ---
 
-## 7. Files
+## 8. Files
 
 ```
 sim_channel.py         synthetic channel, DFT codebook, first dataset
@@ -378,10 +455,11 @@ cnn_ablation.py        receptive-field diagnostic (§3.2)
 realistic_channel.py   path loss, shadowing, spread, mobility, blockage
 train_realistic.py     ablation study (§3.3)
 diagnose_realistic.py  distance-stratified accuracy
-download_deepmimo.py   scenario downloader (§5.1, handles the one-shot token)
+download_deepmimo.py   scenario downloader (§5, handles the one-shot token)
 probe_deepmimo.py      which scenarios are downloadable, and how big
 deepmimo_adapter.py    DeepMIMO v4 -> same tensor format
-train_deepmimo.py      training + N-challenging-beams protocol (§5.2)
+train_deepmimo.py      training + N-challenging-beams protocol (§6.2)
+sweep_snr.py           SNR and probe-count sweeps (§6.5)
 CONCEPTS.md            the concepts, explained from first principles
 REPORT.md              this file
 ```
@@ -391,11 +469,17 @@ Reproduce the real-data results:
 ```bash
 .venv-dm/bin/python download_deepmimo.py --only asu_campus_3p5
 .venv-dm/bin/python download_deepmimo.py --only city_6_miami_3p5
+.venv-dm/bin/python download_deepmimo.py --only city_6_miami_28
 .venv-dm/bin/python deepmimo_adapter.py --scenario asu_campus_3p5 --n-ue 20000
 .venv-dm/bin/python deepmimo_adapter.py --scenario city_6_miami_3p5 --n-ue 20000 --tx 0
+.venv-dm/bin/python deepmimo_adapter.py --scenario city_6_miami_28 --n-ue 20000 --tx 0
 python train_deepmimo.py --data data/deepmimo_asu_campus_3p5.npz --epochs 40
-python train_deepmimo.py --data data/deepmimo_city_6_miami_3p5.npz --epochs 40
+python train_deepmimo.py --data data/deepmimo_city_6_miami_28.npz --epochs 40
+python sweep_snr.py --data data/deepmimo_asu_campus_3p5.npz
 ```
+
+The three DeepMIMO downloads are one-shot tokens with a daily quota, so they may
+need to be run on separate occasions.
 
 Reproduce the simulation results:
 

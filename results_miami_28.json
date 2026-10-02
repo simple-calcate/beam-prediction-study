@@ -1,0 +1,54 @@
+{
+  "data": "data/deepmimo_city_6_miami_28.npz",
+  "n_ant": 32,
+  "n_beams": 64,
+  "n_probe": 6,
+  "oracle_dB": 13.88,
+  "models": {
+    "linear": {
+      "top1": 0.32,
+      "top3": 0.5407,
+      "rel_gain_dB": 10.4,
+      "oracle_dB": 13.88,
+      "challenging8_top1": 0.3097,
+      "challenging8_top3": 0.681,
+      "params": 24640,
+      "final_train_loss": 3.0348,
+      "final_train_acc": 0.3208
+    },
+    "mlp": {
+      "top1": 0.9033,
+      "top3": 0.9857,
+      "rel_gain_dB": 13.82,
+      "oracle_dB": 13.88,
+      "challenging8_top1": 0.6497,
+      "challenging8_top3": 0.681,
+      "params": 180800,
+      "final_train_loss": 0.228,
+      "final_train_acc": 0.9274
+    },
+    "cnn": {
+      "top1": 0.839,
+      "top3": 0.9733,
+      "rel_gain_dB": 13.73,
+      "oracle_dB": 13.88,
+      "challenging8_top1": 0.6243,
+      "challenging8_top3": 0.681,
+      "params": 155840,
+      "final_train_loss": 0.2369,
+      "final_train_acc": 0.9149
+    }
+  },
+  "baselines": {
+    "random": {
+      "top1": 0.0156,
+      "rel_gain_dB": 0.0
+    },
+    "majority": {
+      "top1": 0.3097,
+      "rel_gain_dB": 10.25,
+      "beam": 47,
+      "challenging8_top1": 0.3097
+    }
+  }
+}

@@ -1,7 +1,7 @@
 # Beam Prediction for 5G/6G — Preliminary Study
 
-Deep learning-based beam prediction for millimetre-wave MIMO, evaluated on
-ray-traced channel data.
+Learned beam prediction for 5G/6G beam management, evaluated on ray-traced
+channel data at both Sub-6 and millimetre-wave frequencies.
 
 This repository contains my preliminary work toward the graduation project
 topic *"Deep Learning for Beam Management at 5G/6G Wireless Systems"*, carried
@@ -13,10 +13,9 @@ where I have got to and what I think the interesting question actually is.
 
 ## The task
 
-In millimetre-wave systems the channel is highly directional, so a beam must be
-pointed at the user before transmission. The standard approach sweeps a codebook
-and measures which beam is strongest. That sweep costs time and power, and gets
-worse as the codebook grows.
+In directional systems a beam must be pointed at the user before transmission.
+The standard approach sweeps a codebook and measures which beam is strongest.
+That sweep costs time and power, and gets worse as the codebook grows.
 
 The question here is whether a learned model can predict the right beam from a
 small number of channel measurements, so most of the sweep can be skipped.
@@ -35,13 +34,15 @@ many directions makes the "best beam" label ambiguous, and an ablation gave
 0.54 top-1.
 
 I did not trust my own simulator, so I obtained real ray-traced data
-(DeepMIMO, Remcom InSite, 3.5 GHz) and ran the identical experiment:
+(DeepMIMO, Remcom InSite) and ran the identical experiment across three
+scenarios — a campus and a city, at two different frequencies:
 
-| Environment | Model | Top-1 | Relative gain | % of oracle |
-|---|---|---|---|---|
-| My own channel simulator | MLP | 0.543 | 11.18 dB | 82% |
-| Real ray-traced (ASU campus) | MLP | **0.866** | **13.52 dB** | **99.4%** |
-| Real ray-traced (Miami city) | MLP | **0.899** | **13.83 dB** | **99.6%** |
+| Scenario | Frequency | Model | Top-1 | Relative gain | % of oracle |
+|---|---|---|---|---|---|
+| My own channel simulator | — | MLP | 0.543 | 11.18 dB | 82% |
+| Real ray-traced (ASU campus) | 3.5 GHz | MLP | 0.866 | 13.52 dB | 99.4% |
+| Real ray-traced (Miami city) | 3.5 GHz | MLP | 0.899 | 13.83 dB | 99.6% |
+| Real ray-traced (Miami city) | **28 GHz** | MLP | **0.903** | **13.82 dB** | **99.6%** |
 
 The real data **overturned** the conclusion. In an actual deployment the energy
 concentrates into a few dominant directions far more than my model assumed, so
@@ -52,28 +53,64 @@ confirms the task is genuinely being solved rather than being trivially easy.
 **So the straightforward version of this project is already solved.** That is
 the useful result, because it points at what is not.
 
+## Going to millimetre-wave did not change this — and that was surprising
+
+My first instinct was that the task was easy because 3.5 GHz is Sub-6, where
+beam management matters less, and that millimetre-wave (where beams are narrow
+and the sweep is genuinely expensive) would be much harder. So I downloaded the
+28 GHz version of the same Miami scenario and reran everything.
+
+The physics changed substantially — path loss went from −200…−81 dB to
+−227…−100 dB. The task did not change at all:
+
+| | 3.5 GHz | 28 GHz |
+|---|---|---|
+| Path loss range | −200 … −81 dB | −227 … −100 dB |
+| MLP top-1 | 0.899 | 0.903 |
+| Strongest beam covers | 30.1% of users | 30.7% of users |
+| Median gap between best and 2nd-best beam | 1.38 dB | 1.38 dB |
+
+That last row is the explanation. Beamwidth for a ULA is approximately `2/N`
+radians — set by the **antenna count alone**, independent of frequency. Raising
+the frequency shortens the wavelength and shrinks the physical aperture, but it
+also makes the channel more directional, and the two effects cancel out.
+
+So difficulty is not driven by frequency. It is driven by the ratio of codebook
+size to array size — which is what actually sets how many beams are close
+enough together to be confused. Under this framing the saturated result is
+expected rather than surprising, and it tells me what would actually make the
+problem harder: **more beams, or more antennas**, not a different band.
+
 ## The question I want to work on
 
-I noticed a defect in my own data while checking the above: all six probes
-observe an *identical* channel, differing only in noise. That is physically
-wrong. In a real deployment successive probes are separated in time and the user
-has moved — which is exactly why 3GPP uses multiple probes in the first place.
+Two things my experiments have not touched, both of which the static
+single-snapshot setup hides:
+
+**1. The user never moves.** All six probes observe an *identical* channel,
+differing only in noise (the difference is exactly 0.0 for every user). That is
+physically wrong. In a real deployment successive probes are separated in time
+and the user has moved — which is exactly why 3GPP uses multiple probes.
+
+**2. The array is unrealistically small.** 32 antennas with a 64-beam codebook
+is a benign ratio. Real mmWave deployments use 256-element arrays, where the
+sweep is far more expensive and the neighbouring-beam confusion is much worse.
 
 So the question I would like to pursue is:
 
-> **When the user moves between probes, how many channel measurements are
-> actually needed to select the right beam — and what is the boundary at which
-> the prediction breaks down?**
+> **Under a realistic array size and a moving user, how many channel
+> measurements are actually needed to select the right beam — and what is the
+> boundary at which the prediction breaks down?**
 
-The static case is saturated, so the research content lives in the moving case.
-This also connects back to beam failure detection and recovery in the 3GPP
-procedure, which my current work does not touch at all.
+Both parts are needed: without them the answer is a trivial "one probe, static,
+done", which is what I have now. This also connects to beam failure detection
+and recovery in the 3GPP procedure, which my current work does not touch at all.
 
 ## What I have and have not done
 
-**Done** — full pipeline from raw ray-traced data to trained baselines; two
-independent scenarios; an ablation; an SNR sweep; verification that the train/test
-split has no spatial leakage; and a written record of the bugs I hit and fixed.
+**Done** — full pipeline from raw ray-traced data to trained baselines; three
+scenarios spanning two frequencies; an ablation; SNR and probe-count sweeps; a
+controlled frequency comparison; verification that the train/test split has no
+spatial leakage; and a written record of the bugs I hit and fixed.
 
 **Not done** — mobility between probes (the defect above); beam failure
 handling; overhead accounting; multiple seeds and error bars; comparison against
@@ -95,13 +132,16 @@ uv venv --python 3.12 .venv-dm
 uv pip install --python .venv-dm/bin/python deepmimo numpy
 .venv-dm/bin/python download_deepmimo.py --only asu_campus_3p5
 .venv-dm/bin/python download_deepmimo.py --only city_6_miami_3p5
+.venv-dm/bin/python download_deepmimo.py --only city_6_miami_28
 .venv-dm/bin/python deepmimo_adapter.py --scenario asu_campus_3p5 --n-ue 20000
 .venv-dm/bin/python deepmimo_adapter.py --scenario city_6_miami_3p5 --n-ue 20000 --tx 0
+.venv-dm/bin/python deepmimo_adapter.py --scenario city_6_miami_28 --n-ue 20000 --tx 0
 python train_deepmimo.py --data data/deepmimo_asu_campus_3p5.npz --epochs 40
+python train_deepmimo.py --data data/deepmimo_city_6_miami_28.npz --epochs 40
 python sweep_snr.py --data data/deepmimo_asu_campus_3p5.npz
 ```
 
-DeepMIMO downloads are one-shot tokens with a daily quota, so the two download
+DeepMIMO downloads are one-shot tokens with a daily quota, so the three download
 commands may need to be run on separate occasions.
 
 ## Files
