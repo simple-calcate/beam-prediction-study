@@ -1,0 +1,223 @@
+{
+  "data": "data/deepmimo_asu_campus_3p5.npz",
+  "snr_sweep": {
+    "-5.0": {
+      "linear": {
+        "top1": 0.174,
+        "top3": 0.316,
+        "rel_gain_dB": 7.81,
+        "oracle_dB": 13.6,
+        "challenging8_top1": 0.1497,
+        "challenging8_top3": 0.4487
+      },
+      "mlp": {
+        "top1": 0.7267,
+        "top3": 0.9277,
+        "rel_gain_dB": 13.25,
+        "oracle_dB": 13.6,
+        "challenging8_top1": 0.4153,
+        "challenging8_top3": 0.4487
+      }
+    },
+    "0.0": {
+      "linear": {
+        "top1": 0.17,
+        "top3": 0.3287,
+        "rel_gain_dB": 7.75,
+        "oracle_dB": 13.6,
+        "challenging8_top1": 0.1403,
+        "challenging8_top3": 0.4487
+      },
+      "mlp": {
+        "top1": 0.8147,
+        "top3": 0.9707,
+        "rel_gain_dB": 13.45,
+        "oracle_dB": 13.6,
+        "challenging8_top1": 0.4277,
+        "challenging8_top3": 0.4487
+      }
+    },
+    "5.0": {
+      "linear": {
+        "top1": 0.1887,
+        "top3": 0.3537,
+        "rel_gain_dB": 8.15,
+        "oracle_dB": 13.6,
+        "challenging8_top1": 0.1557,
+        "challenging8_top3": 0.4487
+      },
+      "mlp": {
+        "top1": 0.8457,
+        "top3": 0.9783,
+        "rel_gain_dB": 13.5,
+        "oracle_dB": 13.6,
+        "challenging8_top1": 0.4307,
+        "challenging8_top3": 0.4487
+      }
+    },
+    "10.0": {
+      "linear": {
+        "top1": 0.1857,
+        "top3": 0.3547,
+        "rel_gain_dB": 8.09,
+        "oracle_dB": 13.6,
+        "challenging8_top1": 0.1537,
+        "challenging8_top3": 0.4487
+      },
+      "mlp": {
+        "top1": 0.857,
+        "top3": 0.9773,
+        "rel_gain_dB": 13.51,
+        "oracle_dB": 13.6,
+        "challenging8_top1": 0.4333,
+        "challenging8_top3": 0.4487
+      }
+    },
+    "15.0": {
+      "linear": {
+        "top1": 0.1907,
+        "top3": 0.3583,
+        "rel_gain_dB": 8.15,
+        "oracle_dB": 13.6,
+        "challenging8_top1": 0.1567,
+        "challenging8_top3": 0.4487
+      },
+      "mlp": {
+        "top1": 0.863,
+        "top3": 0.9803,
+        "rel_gain_dB": 13.52,
+        "oracle_dB": 13.6,
+        "challenging8_top1": 0.433,
+        "challenging8_top3": 0.4487
+      }
+    },
+    "20.0": {
+      "linear": {
+        "top1": 0.193,
+        "top3": 0.355,
+        "rel_gain_dB": 8.24,
+        "oracle_dB": 13.6,
+        "challenging8_top1": 0.157,
+        "challenging8_top3": 0.4487
+      },
+      "mlp": {
+        "top1": 0.862,
+        "top3": 0.981,
+        "rel_gain_dB": 13.52,
+        "oracle_dB": 13.6,
+        "challenging8_top1": 0.4363,
+        "challenging8_top3": 0.4487
+      }
+    },
+    "25.0": {
+      "linear": {
+        "top1": 0.1823,
+        "top3": 0.3543,
+        "rel_gain_dB": 8.04,
+        "oracle_dB": 13.6,
+        "challenging8_top1": 0.1453,
+        "challenging8_top3": 0.4487
+      },
+      "mlp": {
+        "top1": 0.872,
+        "top3": 0.977,
+        "rel_gain_dB": 13.53,
+        "oracle_dB": 13.6,
+        "challenging8_top1": 0.4377,
+        "challenging8_top3": 0.4487
+      }
+    },
+    "30.0": {
+      "linear": {
+        "top1": 0.196,
+        "top3": 0.355,
+        "rel_gain_dB": 8.23,
+        "oracle_dB": 13.6,
+        "challenging8_top1": 0.1607,
+        "challenging8_top3": 0.4487
+      },
+      "mlp": {
+        "top1": 0.872,
+        "top3": 0.9797,
+        "rel_gain_dB": 13.53,
+        "oracle_dB": 13.6,
+        "challenging8_top1": 0.4337,
+        "challenging8_top3": 0.4487
+      }
+    }
+  },
+  "probe_sweep": {
+    "1": {
+      "linear": {
+        "top1": 0.185,
+        "top3": 0.3417,
+        "rel_gain_dB": 8.04,
+        "oracle_dB": 13.6,
+        "challenging8_top1": 0.1557,
+        "challenging8_top3": 0.4487
+      },
+      "mlp": {
+        "top1": 0.8747,
+        "top3": 0.9833,
+        "rel_gain_dB": 13.53,
+        "oracle_dB": 13.6,
+        "challenging8_top1": 0.4357,
+        "challenging8_top3": 0.4487
+      }
+    },
+    "2": {
+      "linear": {
+        "top1": 0.189,
+        "top3": 0.353,
+        "rel_gain_dB": 8.15,
+        "oracle_dB": 13.6,
+        "challenging8_top1": 0.1567,
+        "challenging8_top3": 0.4487
+      },
+      "mlp": {
+        "top1": 0.869,
+        "top3": 0.9837,
+        "rel_gain_dB": 13.53,
+        "oracle_dB": 13.6,
+        "challenging8_top1": 0.4353,
+        "challenging8_top3": 0.4487
+      }
+    },
+    "4": {
+      "linear": {
+        "top1": 0.1897,
+        "top3": 0.3513,
+        "rel_gain_dB": 8.16,
+        "oracle_dB": 13.6,
+        "challenging8_top1": 0.1553,
+        "challenging8_top3": 0.4487
+      },
+      "mlp": {
+        "top1": 0.8647,
+        "top3": 0.984,
+        "rel_gain_dB": 13.53,
+        "oracle_dB": 13.6,
+        "challenging8_top1": 0.436,
+        "challenging8_top3": 0.4487
+      }
+    },
+    "6": {
+      "linear": {
+        "top1": 0.195,
+        "top3": 0.3517,
+        "rel_gain_dB": 8.21,
+        "oracle_dB": 13.6,
+        "challenging8_top1": 0.1583,
+        "challenging8_top3": 0.4487
+      },
+      "mlp": {
+        "top1": 0.867,
+        "top3": 0.983,
+        "rel_gain_dB": 13.53,
+        "oracle_dB": 13.6,
+        "challenging8_top1": 0.4343,
+        "challenging8_top3": 0.4487
+      }
+    }
+  }
+}

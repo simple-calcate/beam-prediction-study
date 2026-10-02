@@ -1,0 +1,18 @@
+# DeepMIMO 原始场景数据（130–210 MB）
+# 获取方式见 README，或运行：
+#   .venv-dm/bin/python download_deepmimo.py --only asu_campus_3p5
+#   .venv-dm/bin/python download_deepmimo.py --only city_6_miami_3p5
+deepmimo_scenarios/
+
+# 生成的数据集（约 9.5 MB / 场景，可由 deepmimo_adapter.py 重建）
+data/*.npz
+
+# Python 环境
+.venv-dm/
+__pycache__/
+*.pyc
+
+# 编辑器
+.vscode/
+.idea/
+.DS_Store

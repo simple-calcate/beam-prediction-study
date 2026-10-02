@@ -1,0 +1,54 @@
+{
+  "data": "data/deepmimo_asu_campus_3p5.npz",
+  "n_ant": 32,
+  "n_beams": 64,
+  "n_probe": 6,
+  "oracle_dB": 13.6,
+  "models": {
+    "linear": {
+      "top1": 0.192,
+      "top3": 0.3577,
+      "rel_gain_dB": 8.23,
+      "oracle_dB": 13.6,
+      "challenging8_top1": 0.1557,
+      "challenging8_top3": 0.4487,
+      "params": 24640,
+      "final_train_loss": 3.5299,
+      "final_train_acc": 0.2326
+    },
+    "mlp": {
+      "top1": 0.8657,
+      "top3": 0.9787,
+      "rel_gain_dB": 13.52,
+      "oracle_dB": 13.6,
+      "challenging8_top1": 0.4367,
+      "challenging8_top3": 0.4487,
+      "params": 180800,
+      "final_train_loss": 0.2361,
+      "final_train_acc": 0.9225
+    },
+    "cnn": {
+      "top1": 0.744,
+      "top3": 0.9517,
+      "rel_gain_dB": 13.29,
+      "oracle_dB": 13.6,
+      "challenging8_top1": 0.4203,
+      "challenging8_top3": 0.4487,
+      "params": 155840,
+      "final_train_loss": 0.336,
+      "final_train_acc": 0.876
+    }
+  },
+  "baselines": {
+    "random": {
+      "top1": 0.0156,
+      "rel_gain_dB": 0.0
+    },
+    "majority": {
+      "top1": 0.122,
+      "rel_gain_dB": 6.33,
+      "beam": 47,
+      "challenging8_top1": 0.0483
+    }
+  }
+}

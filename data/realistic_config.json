@@ -1,0 +1,37 @@
+{
+  "cfg": {
+    "n_ant": 32,
+    "fc_ghz": 28.0,
+    "n_paths": 5,
+    "n_users": 8000,
+    "snr_db": 20.0,
+    "n_beams": 64,
+    "n_probes": 6,
+    "obs_noise": true,
+    "frac_val": 0.15,
+    "frac_test": 0.15,
+    "seed": 20261002
+  },
+  "real": {
+    "bs_height": 15.0,
+    "bs_height_ue": 1.5,
+    "cell_radius": 500.0,
+    "pl_exponent": 3.8,
+    "pl_d0": 1.0,
+    "pl_at_d0": 32.0,
+    "shadow_sigma_db": 6.0,
+    "shadow_clusters": 40,
+    "shadow_corr": 0.997,
+    "spread_near": 0.004,
+    "spread_far": 0.12,
+    "spread_ref_distance": 50.0,
+    "moving_fraction": 0.25,
+    "speed_mps": 8.0,
+    "probe_gap_s": 0.5,
+    "blocked_fraction": 0.1,
+    "element_pattern": true,
+    "mutual_coupling": 0.05,
+    "n_paths_urban": 9
+  },
+  "note": "DeepMIMO was unreachable (Backblaze B2 host blocked); this simulator adds the equivalent physical effects."
+}
